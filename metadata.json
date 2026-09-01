@@ -1,0 +1,6 @@
+{
+  "name": "Personal Gemini Journal",
+  "description": "An authenticated, private AI-powered journaling, brainstorming, and reflection platform with structured insights.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

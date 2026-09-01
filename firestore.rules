@@ -1,0 +1,50 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Core security function: ensure the request is authenticated and matches the resource owner
+    function isOwner(userId) {
+      return request.auth != null && request.auth.uid == userId;
+    }
+
+    // User profile document
+    match /users/{userId} {
+      allow read, write: if isOwner(userId);
+
+      // Journal documents
+      match /journals/{journalId} {
+        allow read, write: if isOwner(userId);
+
+        // Messages subcollection
+        match /messages/{messageId} {
+          allow read, write: if isOwner(userId);
+        }
+      }
+
+      // Summaries subcollection
+      match /summaries/{summaryId} {
+        allow read, write: if isOwner(userId);
+      }
+
+      // Settings and preferences subcollection
+      match /settings/{settingId} {
+        allow read, write: if isOwner(userId);
+      }
+
+      // Insights and goal tracking subcollection
+      match /insights/{insightId} {
+        allow read, write: if isOwner(userId);
+      }
+
+      // Action items tracking
+      match /actions/{actionId} {
+        allow read, write: if isOwner(userId);
+      }
+    }
+
+    // Explicitly deny everything else
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

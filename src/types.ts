@@ -6,6 +6,24 @@ export type JournalMode =
   | 'goal_planning'
   | 'study_notes';
 
+export type GeminiModelId = 
+  | 'gemini-3.5-flash'
+  | 'gemini-3.1-pro-preview'
+  | 'gemini-3.1-flash-lite';
+
+export type ChatPersonaRole = 
+  | 'empathetic_guide'
+  | 'socratic_mentor'
+  | 'life_coach'
+  | 'problem_solver'
+  | 'creative_partner'
+  | 'research_analyst';
+
+export interface GroundingSource {
+  title: string;
+  uri: string;
+}
+
 export interface JournalModeConfig {
   id: JournalMode;
   label: string;
@@ -41,6 +59,9 @@ export interface ChatMessage {
   createdAt: number;
   status?: 'sent' | 'pending' | 'error';
   mode?: JournalMode;
+  groundingSources?: GroundingSource[];
+  modelUsed?: string;
+  personaRole?: string;
 }
 
 export interface ActionItem {
@@ -106,4 +127,41 @@ export interface SecurityTestResult {
   status: 'passed' | 'failed' | 'running';
   details: string;
   timestamp: number;
+}
+
+export interface GmailEmail {
+  id: string;
+  threadId: string;
+  snippet: string;
+  internalDate: string;
+  labelIds: string[];
+  subject: string;
+  from: string;
+  to: string;
+  date: string;
+  bodyText: string;
+  bodyHtml?: string;
+  isUnread: boolean;
+  isStarred: boolean;
+  isImportant: boolean;
+}
+
+export interface GmailComposeRequest {
+  to: string;
+  subject: string;
+  body: string;
+  inReplyTo?: string;
+  threadId?: string;
+}
+
+export interface EmailGeminiAnalysis {
+  summary: string;
+  tone: string;
+  keyPoints: string[];
+  actionItems: string[];
+  suggestedReflectionPrompt: string;
+  draftReplies: Array<{
+    title: string;
+    text: string;
+  }>;
 }

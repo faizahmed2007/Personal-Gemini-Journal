@@ -37,12 +37,28 @@ export const auth = getAuth(app);
 export const googleProvider = new GoogleAuthProvider();
 googleProvider.setCustomParameters({ prompt: 'select_account' });
 
+// Add Google Workspace Gmail scopes
+export const GMAIL_SCOPES = [
+  'https://mail.google.com/',
+  'https://www.googleapis.com/auth/gmail.modify',
+  'https://www.googleapis.com/auth/gmail.send',
+  'https://www.googleapis.com/auth/gmail.readonly',
+  'https://www.googleapis.com/auth/gmail.compose',
+  'https://www.googleapis.com/auth/gmail.labels'
+];
+
+GMAIL_SCOPES.forEach((scope) => {
+  googleProvider.addScope(scope);
+});
+
 // Initialize Firestore targeting the specific database if configured
-export const db: Firestore = firebaseConfig.firestoreDatabaseId && firebaseConfig.firestoreDatabaseId !== '(default)'
-  ? getFirestore(app, firebaseConfig.firestoreDatabaseId)
+const configuredDbId = (firebaseConfig as Record<string, any>).firestoreDatabaseId;
+export const db: Firestore = configuredDbId && configuredDbId !== '(default)'
+  ? getFirestore(app, configuredDbId)
   : getFirestore(app);
 
 export {
+  GoogleAuthProvider,
   signInWithPopup,
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,

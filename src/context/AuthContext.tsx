@@ -2,6 +2,7 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import { 
   auth, 
   googleProvider, 
+  GoogleAuthProvider,
   signInWithPopup, 
   signInWithEmailAndPassword, 
   createUserWithEmailAndPassword, 
@@ -12,15 +13,21 @@ import {
   type User
 } from '../firebase';
 
+// In-memory token cache (never in localStorage/sessionStorage)
+let cachedGoogleAccessToken: string | null = null;
+
 interface AuthContextType {
   user: User | null;
   loading: boolean;
   getIdToken: () => Promise<string>;
-  signInWithGoogle: () => Promise<void>;
+  getGoogleAccessToken: () => Promise<string | null>;
+  signInWithGoogle: () => Promise<string | null>;
+  connectGmail: () => Promise<string | null>;
   signInWithEmail: (email: string, pass: string) => Promise<void>;
   signUpWithEmail: (email: string, pass: string, name?: string) => Promise<void>;
   resetPassword: (email: string) => Promise<void>;
   logout: () => Promise<void>;
+  hasGmailAccess: boolean;
   error: string | null;
   clearError: () => void;
 }
@@ -31,14 +38,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [hasGmailAccess, setHasGmailAccess] = useState<boolean>(false);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       setUser(currentUser);
+      if (!currentUser) {
+        cachedGoogleAccessToken = null;
+        setHasGmailAccess(false);
+      }
       setLoading(false);
     }, (err) => {
       console.error('Firebase Auth state error:', err);
       setError(err.message);
+      cachedGoogleAccessToken = null;
+      setHasGmailAccess(false);
       setLoading(false);
     });
 
@@ -52,13 +66,42 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return await user.getIdToken(/* forceRefresh */ false);
   };
 
-  const signInWithGoogle = async () => {
+  const getGoogleAccessToken = async (): Promise<string | null> => {
+    return cachedGoogleAccessToken;
+  };
+
+  const signInWithGoogle = async (): Promise<string | null> => {
     try {
       setError(null);
-      await signInWithPopup(auth, googleProvider);
+      const result = await signInWithPopup(auth, googleProvider);
+      const credential = GoogleAuthProvider.credentialFromResult(result);
+      if (credential?.accessToken) {
+        cachedGoogleAccessToken = credential.accessToken;
+        setHasGmailAccess(true);
+        return credential.accessToken;
+      }
+      return null;
     } catch (err: any) {
       console.error('Google Sign In Error:', err);
       setError(err.message || 'Failed to sign in with Google');
+      throw err;
+    }
+  };
+
+  const connectGmail = async (): Promise<string | null> => {
+    try {
+      setError(null);
+      const result = await signInWithPopup(auth, googleProvider);
+      const credential = GoogleAuthProvider.credentialFromResult(result);
+      if (credential?.accessToken) {
+        cachedGoogleAccessToken = credential.accessToken;
+        setHasGmailAccess(true);
+        return credential.accessToken;
+      }
+      throw new Error('Could not obtain Gmail access token from Google sign in');
+    } catch (err: any) {
+      console.error('Connect Gmail Error:', err);
+      setError(err.message || 'Failed to connect Gmail account');
       throw err;
     }
   };
@@ -103,6 +146,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const logout = async () => {
     try {
       setError(null);
+      cachedGoogleAccessToken = null;
+      setHasGmailAccess(false);
       await signOut(auth);
     } catch (err: any) {
       console.error('Logout Error:', err);
@@ -118,11 +163,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         user,
         loading,
         getIdToken,
+        getGoogleAccessToken,
         signInWithGoogle,
+        connectGmail,
         signInWithEmail,
         signUpWithEmail,
         resetPassword,
         logout,
+        hasGmailAccess,
         error,
         clearError
       }}

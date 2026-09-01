@@ -13,12 +13,15 @@ import {
   User as UserIcon, 
   Plus, 
   Lock,
-  ChevronDown
+  ChevronDown,
+  Mail
 } from 'lucide-react';
 
+export type AppView = 'landing' | 'dashboard' | 'chat' | 'journals' | 'insights' | 'security' | 'gmail';
+
 interface NavbarProps {
-  currentView: 'landing' | 'dashboard' | 'chat' | 'journals' | 'insights' | 'security';
-  setCurrentView: (view: 'landing' | 'dashboard' | 'chat' | 'journals' | 'insights' | 'security') => void;
+  currentView: AppView;
+  setCurrentView: (view: AppView) => void;
   onOpenNewJournal: () => void;
   onOpenAuth: () => void;
   onOpenPrivacy: () => void;
@@ -100,6 +103,19 @@ export const Navbar: React.FC<NavbarProps> = ({
             >
               <BarChart3 className="w-4 h-4" />
               <span>Insights</span>
+            </button>
+
+            <button
+              id="nav-gmail-btn"
+              onClick={() => setCurrentView('gmail')}
+              className={`flex items-center gap-1.5 py-1.5 px-3 rounded-lg transition-all ${
+                currentView === 'gmail'
+                  ? 'bg-white dark:bg-slate-900 text-blue-700 dark:text-blue-300 font-semibold shadow-2xs'
+                  : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'
+              }`}
+            >
+              <Mail className="w-4 h-4" />
+              <span>Gmail</span>
             </button>
 
             <button
@@ -268,6 +284,16 @@ export const Navbar: React.FC<NavbarProps> = ({
           >
             <BarChart3 className="w-4 h-4" />
             <span>Insights</span>
+          </button>
+          <button
+            id="mobile-nav-gmail-btn"
+            onClick={() => setCurrentView('gmail')}
+            className={`flex flex-col items-center gap-1 py-1 px-3 rounded-lg ${
+              currentView === 'gmail' ? 'text-blue-700 dark:text-blue-400 font-semibold' : 'text-slate-500'
+            }`}
+          >
+            <Mail className="w-4 h-4" />
+            <span>Gmail</span>
           </button>
           <button
             onClick={() => setCurrentView('security')}

@@ -14,6 +14,7 @@ import { AuthModal } from './components/AuthModal';
 import { JournalSummaryModal } from './components/JournalSummaryModal';
 import { PrivacySettingsModal } from './components/PrivacySettingsModal';
 import { SecurityCenterModal } from './components/SecurityCenterModal';
+import { GmailView } from './components/GmailView';
 import { 
   Compass, 
   BookOpen, 
@@ -28,10 +29,11 @@ import {
   Shield, 
   Menu, 
   X as CloseIcon,
-  CheckCircle2
+  CheckCircle2,
+  Mail
 } from 'lucide-react';
 
-type AppView = 'landing' | 'dashboard' | 'chat' | 'journals' | 'insights' | 'security';
+type AppView = 'landing' | 'dashboard' | 'chat' | 'journals' | 'insights' | 'security' | 'gmail';
 
 export const App: React.FC = () => {
   const { user, loading: authLoading, logout } = useAuth();
@@ -398,6 +400,19 @@ export const App: React.FC = () => {
             </button>
 
             <button
+              id="sidebar-gmail-btn"
+              onClick={() => setCurrentView('gmail')}
+              className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg transition-colors text-left ${
+                currentView === 'gmail'
+                  ? 'bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 font-semibold'
+                  : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
+              }`}
+            >
+              <Mail className="w-4 h-4" />
+              <span>Gmail Hub</span>
+            </button>
+
+            <button
               id="sidebar-security-btn"
               onClick={() => setSecurityModalOpen(true)}
               className="w-full flex items-center gap-3 px-3 py-2 rounded-lg transition-colors text-left text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"
@@ -497,6 +512,14 @@ export const App: React.FC = () => {
                 >
                   <BarChart3 className="w-4 h-4" />
                   <span>Insights</span>
+                </button>
+                <button
+                  id="mobile-drawer-gmail-btn"
+                  onClick={() => { setCurrentView('gmail'); setMobileMenuOpen(false); }}
+                  className="w-full flex items-center gap-3 px-3 py-2 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-left"
+                >
+                  <Mail className="w-4 h-4" />
+                  <span>Gmail Hub</span>
                 </button>
                 <button
                   onClick={() => { setSecurityModalOpen(true); setMobileMenuOpen(false); }}
@@ -634,6 +657,28 @@ export const App: React.FC = () => {
               weeklyReflections={weeklyReflections}
               onActionStatusChange={handleActionStatusChange}
               onNewWeeklyReflection={(ref) => setWeeklyReflections(prev => [ref, ...prev])}
+            />
+          )}
+
+          {currentView === 'gmail' && (
+            <GmailView
+              onStartNewJournalWithContent={(mode, initialPrompt, customTitle) => {
+                handleStartNewJournal(mode, initialPrompt, customTitle);
+              }}
+              onAddActionItem={async (text) => {
+                if (!user) return;
+                try {
+                  const newAction = await firestoreService.saveActionItem(user.uid, {
+                    text,
+                    status: 'pending',
+                    createdAt: Date.now()
+                  });
+                  setActionItems(prev => [newAction, ...prev]);
+                  showToast('Added action item to your tracker!', 'success');
+                } catch {
+                  showToast('Failed to save action item', 'error');
+                }
+              }}
             />
           )}
         </main>

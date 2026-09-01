@@ -264,9 +264,20 @@ export const firestoreService = {
   // ACTION ITEMS
   // ==========================================
 
-  async saveActionItem(userId: string, action: ActionItem): Promise<void> {
-    const actionRef = doc(db, 'users', userId, 'actions', action.id);
-    await setDoc(actionRef, action, { merge: true });
+  async saveActionItem(userId: string, action: Partial<ActionItem> & { text: string }): Promise<ActionItem> {
+    const actionId = action.id || `act-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
+    const fullAction: ActionItem = {
+      id: actionId,
+      text: action.text,
+      status: action.status || 'pending',
+      journalId: action.journalId,
+      journalTitle: action.journalTitle,
+      createdAt: action.createdAt || Date.now(),
+      completedAt: action.completedAt
+    };
+    const actionRef = doc(db, 'users', userId, 'actions', actionId);
+    await setDoc(actionRef, fullAction, { merge: true });
+    return fullAction;
   },
 
   async getActionItems(userId: string): Promise<ActionItem[]> {
